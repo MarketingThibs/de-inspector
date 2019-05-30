@@ -153,3 +153,4 @@ function downloadcsv() {
 - [Get and Set values](https://developer.salesforce.com/docs/atlas.en-us.mc-programmatic-content.meta/mc-programmatic-content/ssjs_platformAMPscriptVariableGetValue.htm)
 - [Stringify](https://developer.salesforce.com/docs/atlas.en-us.mc-programmatic-content.meta/mc-programmatic-content/ssjs_platformUtilityStringify.htm)
 - [Data Extension Object ref](https://developer.salesforce.com/docs/atlas.en-us.mc-apis.meta/mc-apis/dataextension.htm)
+- [SLDS](https://www.lightningdesignsystem.com/)
