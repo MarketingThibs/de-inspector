@@ -18,6 +18,7 @@ Form that retrieves all the data extension from you marketing cloud account and 
     <script runat="server">
         Platform.Load("Core", "1.1.1");
         try {
+            // get all DEs names for the dropdown input
             var searchItem = Platform.Request.GetQueryStringParameter('deNameInput');
             var prox2 = new Script.Util.WSProxy();
             var objectType2 = "DataExtension";
@@ -27,13 +28,15 @@ Form that retrieves all the data extension from you marketing cloud account and 
                 SimpleOperator: "notEquals",
                 Value: "All Subscribers"
             };
-            var allDes = prox2.retrieve(objectType2, cols2, queryAllAccounts);        
+            var allDes = prox2.retrieve(objectType2, cols2, queryAllAccounts);
+            // generates htnl input
             Write('<datalist id="deNameToSearch">');
             for (var l = 0; l < allDes.Results.length; l++) {
                 Write('<option value="' + allDes.Results[l].Name + '">');
             }
             Write('</datalist>');
-            Variable.SetValue("@s
+            // create an AMPscript value to pass the variable values to the next SSJS code block
+            Variable.SetValue("@searchItem", searchItem);
         } catch (ex) {
             Write("error message: " + ex);
         }
@@ -58,21 +61,27 @@ Platform.Load("Core", "1.1.1");
 try {
     var prox1 = new Script.Util.WSProxy();
     var searchItemVal1 = Variable.GetValue("@searchItem");
+    // indicating the properties of the DE according to the SOAP API data extension object
     var cols1 = ["Name", "CustomerKey", "CategoryID", "IsSendable", "IsTestable", "CreatedDate", "ModifiedDate", "Description"];
     var filter1 = {
         Property: "Name",
         SimpleOperator: "equals",
         Value: searchItemVal1
     };
+    // retrieve the fields informations
     var desc = prox1.retrieve("DataExtension", cols1, filter1);
     var CustKeyStr = Platform.Function.Stringify(desc.Results[0].CustomerKey);
     var myDe = DataExtension.Init(desc.Results[0].CustomerKey);
     var fields = myDe.Fields.Retrieve();
+    // ROWS retrieve for the CSV export
     var deRecords = myDe.Rows.Retrieve();
     var stringDeRecords = Stringify(deRecords);
     Variable.SetValue("@ampDeRecords", stringDeRecords);
+    // Get the DE name, for the csv file too
     var deName = desc.Results[0].Name;
     Variable.SetValue("@ampDeName", deName);
+
+    // outputs the results into HTML tables using SLDS
     Write('<table class="slds-table slds-table_cell-buffer slds-table_bordered"> <thead> <tr class="slds-line-height_reset"> <th class="" scope="col"> <div class="slds-truncate" title="Name">Name</div> </th> <th class="" scope="col"> <div class="slds-truncate" title="CustomerKey">CustomerKey</div> </th> <th class="" scope="col"> <div class="slds-truncate" title="Folder Id">Folder Id</div> </th> <th class="" scope="col"> <div class="slds-truncate" title="Description">Description</div> </th> </tr> </thead> <tbody>');
     Write('<tr class="slds-hint-parent">');
     Write('<td data-label=""><div class="slds-truncate" title="">' + desc.Results[0].Name + '</div></td>');
@@ -119,6 +128,7 @@ Get the data extensions rows thanks to the `ampDeRecords` variable and generates
 
 ```html
 <script>
+// set the DE rows out put as JSON
 var json = %%=v(@ampDeRecords)=%% ;
 var fields = Object.keys(json[0])
 var replacer = function(key, value) { return value === null ? '' : value }
@@ -127,20 +137,22 @@ var csv = json.map(function(row) {
         return JSON.stringify(row[fieldName], replacer)
     }).join(',')
 })
-csv.unshift(fields.join(',')) // add header column
+// add header column
+csv.unshift(fields.join(',')) 
 
 console.log(csv.join('\r\n'))
 
+// Download function
 function downloadcsv() {
     var hiddenElement = document.createElement('a');
     hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI((csv.join('\r\n')));
     hiddenElement.target = '_blank';
+    // set the name of the file according to the name of the DE
     hiddenElement.download = '%%=v(@ampDeName)=%%.csv';
     hiddenElement.click();
 }
 </script>
-<button class="slds-button slds-button_neutral" onclick="downloadcsv()">
-    <b>Download the data extension in .csv</b></button>
+<button class="slds-button slds-button_neutral" onclick="downloadcsv()"><b>Download the data extension in .csv</b></button>
 ```
 
 
